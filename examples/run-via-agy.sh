@@ -54,11 +54,20 @@ PROMPT="${1:-$DEFAULT_PROMPT}"
 
 command -v agy >/dev/null || { echo "✗ agy not found on PATH ($HOME/.local/bin). Install: curl -fsSL https://antigravity.google/cli/install.sh | bash"; exit 1; }
 
+# agy runs ONE session at a time. If one is already going, a second invocation
+# exits instantly with an empty log — don't stomp the active run.
+if pgrep -f "agy .*--print" >/dev/null 2>&1; then
+  echo "✗ an agy session is already running — let it finish before starting another. Aborting."
+  exit 1
+fi
+
 echo "▶ photo-montage via agy (Antigravity)"
 echo "  workdir : $WORKDIR"
 echo "  log     : $LOG"
 echo "  expect  : several minutes (Gemini clip/direct + render; longer if downloading from iCloud)"
 echo
+
+STAMP="$WORKDIR/.montage-start.$$"; : > "$STAMP"   # mark run start; only open videos newer than this
 
 agy --dangerously-skip-permissions --print-timeout 28m --print "$PROMPT" 2>&1 | tee "$LOG"
 status=${PIPESTATUS[0]}
@@ -66,12 +75,17 @@ status=${PIPESTATUS[0]}
 echo
 echo "──────────────────────────────────────────────"
 echo "agy exit status: $status   |   log: $LOG"
-# agy may save into its own scratch dir instead of WORKDIR — look in both.
-mp4=$(ls -1t "$WORKDIR"/*.mp4 "$HOME"/.gemini/antigravity-cli/scratch/*.mp4 2>/dev/null | head -1 || true)
-if [ -n "$mp4" ]; then
+# Only consider a video THIS run produced (newer than the start marker) — never
+# open a stale reel from a previous run. agy may save to WORKDIR or its scratch.
+mp4=$(find "$WORKDIR" "$HOME/.gemini/antigravity-cli/scratch" -maxdepth 1 -name '*.mp4' -newer "$STAMP" 2>/dev/null \
+      | while read -r f; do printf '%s\t%s\n' "$(stat -f %m "$f")" "$f"; done | sort -rn | head -1 | cut -f2-)
+rm -f "$STAMP"
+if [ ! -s "$LOG" ]; then
+  echo "⚠ agy produced NO output (empty log). Another agy session may be running, or it failed to start — nothing regenerated (stale reels left untouched)."
+elif [ -n "$mp4" ]; then
   case "$mp4" in "$WORKDIR"/*) : ;; *) cp "$mp4" "$WORKDIR/"; mp4="$WORKDIR/$(basename "$mp4")" ;; esac
-  echo "✓ final mp4: $mp4"
+  echo "✓ new reel: $mp4"
   command -v open >/dev/null && open "$mp4"
 else
-  echo "⚠ no mp4 found in $WORKDIR or agy scratch — check the log above"
+  echo "⚠ agy ran but produced no NEW mp4 this run — check the log above (stale reels left untouched)."
 fi
