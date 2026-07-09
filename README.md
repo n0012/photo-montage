@@ -77,6 +77,10 @@ uv run scripts/select_photos.py --output-dir projects/tahoe --from-date 2026-08-
 # … clip → consolidate → plan_edit → build_reel → publish_photos
 ```
 
+## Examples
+
+- [`examples/run-via-agy.sh`](examples/run-via-agy.sh) — one command to drive the whole skill **headlessly via the Antigravity CLI (`agy`)**: `./run-via-agy.sh` (or pass your own request). Streams a log, saves the mp4, opens it when done.
+
 ## Inspiration & credits
 
 This project stands on two shoulders:
