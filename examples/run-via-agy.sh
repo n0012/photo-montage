@@ -4,6 +4,10 @@
 # Antigravity CLI (`agy`). A worked example of using this skill from an agent
 # harness instead of an interactive chat.
 #
+# NOTE: The skill is agent-agnostic — the same SKILL.md runs under Claude Code
+# or any Agent-Skills-compatible agent. `agy` is just ONE headless harness shown
+# here; nothing about the skill depends on it. Swap in your agent of choice.
+#
 # Prerequisites:
 #   - Antigravity CLI installed + signed in:  curl -fsSL https://antigravity.google/cli/install.sh | bash
 #   - This skill on a skills path agy reads:  ~/.gemini/config/skills/photo-montage
