@@ -2,7 +2,7 @@
 
 **Turn your own Apple Photos into a cinematic, professionally-edited memory reel — with Gemini as the editor — then publish it back to Photos. macOS · local-first · no public uploads.**
 
-`photo-montage` is an [agent skill](https://docs.anthropic.com/en/docs/claude-code) (works with Claude Code and other skill-aware AI agents). You describe the reel in plain language — *"make a reel from my 4th of July weekend"* — and the agent drives a mostly-local pipeline: it finds your best shots, uses **Gemini** to trim videos to their strongest moments and direct the edit, scores it with AI or your own music, and renders a vertical, social-ready cut for YouTube Shorts / Reels / TikTok.
+`photo-montage` is an **Agent Skill** — the open `SKILL.md` standard — so it works with any skill-aware agent, including **[Claude Code](https://docs.anthropic.com/en/docs/claude-code)** and **[Google Antigravity](https://antigravity.google/docs/skills)**. You describe the reel in plain language — *"make a reel from my 4th of July weekend"* — and the agent drives a mostly-local pipeline: it finds your best shots, uses **Gemini** to trim videos to their strongest moments and direct the edit, scores it with AI or your own music, and renders a vertical, social-ready cut for YouTube Shorts / Reels / TikTok.
 
 **Where your media goes:** selection, culling, rendering, and the publish-back all run **locally on your Mac**. The AI steps (clip-trimming, the director, the self-review) send **downscaled proxies, thumbnails, and sampled frames** to Google **Gemini** — via your Gemini API key, or your own Google Cloud **Vertex** project if you'd rather keep processing in your own tenancy. Full-res originals and the finished render stay local, and nothing is ever posted publicly — the only "publish" is back into *your own* Photos library.
 
@@ -40,11 +40,18 @@ Each step is a small, self-contained `uv run` script in `scripts/`; the agent or
 
 ## Install
 
-Clone into your agent's skills directory (Claude Code example):
+Clone into your agent's skills directory:
 
 ```bash
+# Claude Code
 git clone https://github.com/n0012/photo-montage.git ~/.claude/skills/photo-montage
+
+# Google Antigravity — global (all workspaces)
+git clone https://github.com/n0012/photo-montage.git ~/.gemini/config/skills/photo-montage
+# …or per-workspace: <workspace-root>/.agents/skills/photo-montage
 ```
+
+Any other Agent-Skills-compatible agent works too — drop the folder in its skills directory. The agent discovers the skill from `SKILL.md`'s `description`, then follows it; the `scripts/` all support `--help` so the agent can use them as black boxes.
 
 Then configure (all optional — see [`.env.example`](.env.example)):
 
