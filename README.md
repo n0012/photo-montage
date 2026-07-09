@@ -68,9 +68,18 @@ uv run scripts/select_photos.py --output-dir projects/tahoe --from-date 2026-08-
 # … clip → consolidate → plan_edit → build_reel → publish_photos
 ```
 
-## Privacy & credits
+## Inspiration & credits
 
-On-device by design; media is read-only and never uploaded. Cover cards and generated music are new AI assets — real photos are never generatively altered. Uses Google Gemini / Lyria / Nano Banana (via the Gemini API or Vertex AI), [osxphotos](https://github.com/RhetTbull/osxphotos), and FFmpeg.
+This project stands on two shoulders:
+
+- **[Co-Director](https://co-director-agent.github.io/)** — a Google research project on *agentic generative video storytelling*, where a multi-agent system works like a film crew with a built-in auditor that catches inconsistencies **before** rendering (I was part of the Co-Director team). `photo-montage` brings that ethos — an agent that *directs* rather than *concatenates*, and reviews its own cut — down to everyday life: your Apple Photos, on your Mac.
+- **[OpenMontage](https://github.com/calesthio/OpenMontage)** — an open-source, agentic video-production system. Several patterns here were inspired by it: the director + **self-review** pass, a **slideshow-risk** score, and single-**workspace consolidation** so no candidate gets stranded.
+
+Built on Google **Gemini / Lyria / Nano Banana** (via the Gemini API or Vertex AI), [osxphotos](https://github.com/RhetTbull/osxphotos), and **FFmpeg**.
+
+## Privacy
+
+On-device by design; your library is read-only and never uploaded. The only outward step is importing the finished reel back into your own Photos library. Cover cards and generated music are new AI assets — real photos are never generatively altered.
 
 ## License
 
