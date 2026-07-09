@@ -30,7 +30,9 @@ export PATH="$HOME/.local/bin:$PATH"
 
 WORKDIR="${WORKDIR:-$HOME/photo-montage-out}"
 mkdir -p "$WORKDIR"; cd "$WORKDIR"
-LOG="$WORKDIR/agy-run-$(date +%Y%m%d-%H%M%S).log"
+RUNSTAMP=$(date +%Y%m%d-%H%M%S)               # one stamp shared by this run's log + reel
+OUT_BASE="${OUT_BASE:-montage}"               # output name prefix
+LOG="$WORKDIR/agy-run-$RUNSTAMP.log"
 
 # Music: your own track (MONTAGE_MUSIC) if set, otherwise AI-generated (Lyria).
 if [ -n "${MONTAGE_MUSIC:-}" ]; then
@@ -83,9 +85,12 @@ rm -f "$STAMP"
 if [ ! -s "$LOG" ]; then
   echo "⚠ agy produced NO output (empty log). Another agy session may be running, or it failed to start — nothing regenerated (stale reels left untouched)."
 elif [ -n "$mp4" ]; then
-  case "$mp4" in "$WORKDIR"/*) : ;; *) cp "$mp4" "$WORKDIR/"; mp4="$WORKDIR/$(basename "$mp4")" ;; esac
-  echo "✓ new reel: $mp4"
-  command -v open >/dev/null && open "$mp4"
+  # Save every run under a unique timestamped name so iterations don't overwrite
+  # each other and you can compare them side by side.
+  dest="$WORKDIR/${OUT_BASE}-$RUNSTAMP.mp4"
+  cp "$mp4" "$dest"
+  echo "✓ new reel: $dest"
+  command -v open >/dev/null && open "$dest"
 else
   echo "⚠ agy ran but produced no NEW mp4 this run — check the log above (stale reels left untouched)."
 fi
