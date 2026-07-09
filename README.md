@@ -35,8 +35,8 @@ Each step is a small, self-contained `uv run` script in `scripts/`; the agent or
 - [`uv`](https://docs.astral.sh/uv/) · `ffmpeg` (`brew install ffmpeg`) · `sips` (built-in)
 - Terminal **Full Disk Access** (read the library) and, to publish, **Automation → Photos**
 - An AI backend (either one):
-  - a **Gemini API key** (`GEMINI_API_KEY`, free at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)), **or**
-  - **Vertex AI** via `gcloud auth application-default login`
+  - **Vertex AI** via `gcloud auth application-default login` — *recommended for personal media* (your data isn't used for training; see [Privacy](#privacy)), **or**
+  - a **Gemini API key** (`GEMINI_API_KEY`, from [aistudio.google.com/apikey](https://aistudio.google.com/apikey)) — use a **paid** key for private handling; the free tier may be used to train Google's models.
 
 ## Install
 
@@ -81,7 +81,17 @@ Built on Google **Gemini / Lyria / Nano Banana** (via the Gemini API or Vertex A
 
 ## Privacy
 
-Local-first, not fully offline. Your library is read **read-only**; selection, rendering, and the publish-back happen **on your Mac**, and nothing is ever posted publicly (the only "publish" is into your own Photos library). The AI steps do send data to Google: **downscaled video proxies, still thumbnails, and sampled frames** go to **Gemini** for clipping, directing, and self-review. You choose the channel — a **Gemini API key**, or your own **Vertex AI / Google Cloud project** to keep processing in your own tenancy (review Google's data-use terms for whichever you pick). Full-res originals and the final render stay local. Cover cards and generated music are new AI assets — your real photos are never generatively altered.
+Local-first, not fully offline. Your library is read **read-only**; selection, rendering, and the publish-back happen **on your Mac**, and nothing is ever posted publicly (the only "publish" is into your own Photos library). The AI steps do send data to Google: **downscaled video proxies, still thumbnails, and sampled frames** go to **Gemini** for clipping, directing, and self-review. Full-res originals and the final render stay local, and your real photos are never generatively altered.
+
+**How that data is handled depends on the channel you choose** (per Google's terms — verify current versions):
+
+| Channel | Used to train Google's models? | Notes |
+|---|---|---|
+| **Vertex AI** (your own GCP project) | **No** | Enterprise data governance; stays in your project; zero-data-retention option. **Recommended for personal photos.** |
+| **Gemini API — paid** | **No** | Not human-reviewed for improvement; retention for safety/legal only. |
+| **Gemini API — free tier** | **Yes** | Content may be used to improve Google products and **human-reviewed** (de-identified). **Avoid for personal media.** |
+
+For the most private setup, use **Vertex AI** (`gcloud auth application-default login`) or a **paid** Gemini API key.
 
 ## License
 
