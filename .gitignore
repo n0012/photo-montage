@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local config / secrets (only .env.example is committed)
+.env
+
+# Per-run working output (media, clips, renders, plans)
+projects/
+*.mp4
+*.mov
+*.m4a
+*.mp3
+*.wav
+*.flac
+*.heic
+*.HEIC
+*.jpg
+*.jpeg
+*.png
+
+# macOS
+.DS_Store
