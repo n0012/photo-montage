@@ -1,6 +1,6 @@
 ---
 name: photo-montage
-description: "Create a tasteful, cinematic montage reel from your own Apple Photos — Gemini clips videos to their best moments and directs the edit, with AI music, chronological ordering, cross-dissolves/fades, color grade + vignette, and a generated cover card — sized for YouTube Shorts / Reels / TikTok, then published back into Photos. Use when asked to make a montage, memory reel, highlight video, recap, or short from photos/videos of an event, trip, weekend, person, or date range (e.g. 'make a reel from my 4th of July weekend'). macOS + Apple Photos only; media stays on-device."
+description: "Create a tasteful, cinematic montage reel from your own Apple Photos — Gemini clips videos to their best moments and directs the edit, with AI music, chronological ordering, cross-dissolves/fades, color grade + vignette, and a generated cover card — sized for YouTube Shorts / Reels / TikTok, then published back into Photos. Use when asked to make a montage, memory reel, highlight video, recap, or short from photos/videos of an event, trip, weekend, person, or date range (e.g. 'make a reel from my 4th of July weekend'). macOS + Apple Photos only; local-first (AI steps send downscaled proxies/thumbnails to Gemini; nothing posted publicly)."
 version: 2.4.0
 author: nick
 ---
@@ -126,8 +126,11 @@ symlink — `find /tmp …` returns nothing; `consolidate.py` walks dirs directl
 sweet spot 30–90s.
 
 ## Guardrails
-- **Privacy:** on-device; scripts read the library read-only; the only write is
-  the import back into the user's own library. No uploads without explicit OK.
+- **Privacy:** local-first, not fully offline. The library is read read-only and
+  rendering/publish happen locally, but the AI steps send downscaled
+  proxies/thumbnails/frames to Gemini (Gemini API or the user's Vertex project).
+  Nothing is posted publicly; the only write is the import back into the user's
+  own library. Be accurate about this — don't claim "100% on-device."
 - **Taste > score:** Gemini/aesthetic score is input, not verdict — enforce
   variety, chronology, a real story. No auto-dump.
 - **Keep it real:** cover cards / music are fine (new assets); do NOT

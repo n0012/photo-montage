@@ -20,5 +20,9 @@ projects/
 *.jpeg
 *.png
 
+# ...but keep committed docs images
+!docs/
+!docs/*.png
+
 # macOS
 .DS_Store

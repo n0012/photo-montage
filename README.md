@@ -1,10 +1,12 @@
 # photo-montage
 
-**Turn your own Apple Photos into a cinematic, professionally-edited memory reel — with Gemini as the editor — then publish it back to Photos. macOS, on-device, private.**
+**Turn your own Apple Photos into a cinematic, professionally-edited memory reel — with Gemini as the editor — then publish it back to Photos. macOS · local-first · no public uploads.**
 
-`photo-montage` is an [agent skill](https://docs.anthropic.com/en/docs/claude-code) (works with Claude Code and other skill-aware AI agents). You describe the reel in plain language — *"make a reel from my 4th of July weekend"* — and the agent drives a local pipeline: it finds your best shots, uses **Gemini** to trim videos to their strongest moments and direct the edit, scores it with AI or your own music, and renders a vertical, social-ready cut for YouTube Shorts / Reels / TikTok.
+`photo-montage` is an [agent skill](https://docs.anthropic.com/en/docs/claude-code) (works with Claude Code and other skill-aware AI agents). You describe the reel in plain language — *"make a reel from my 4th of July weekend"* — and the agent drives a mostly-local pipeline: it finds your best shots, uses **Gemini** to trim videos to their strongest moments and direct the edit, scores it with AI or your own music, and renders a vertical, social-ready cut for YouTube Shorts / Reels / TikTok.
 
-Your photos never leave your machine. The only outward step is importing the finished reel back into *your own* Photos library.
+**Where your media goes:** selection, culling, rendering, and the publish-back all run **locally on your Mac**. The AI steps (clip-trimming, the director, the self-review) send **downscaled proxies, thumbnails, and sampled frames** to Google **Gemini** — via your Gemini API key, or your own Google Cloud **Vertex** project if you'd rather keep processing in your own tenancy. Full-res originals and the finished render stay local, and nothing is ever posted publicly — the only "publish" is back into *your own* Photos library.
+
+![Apple Photos → Curate · Plan · Edit · Compose · Publish → back to Photos](docs/workflow.png)
 
 ## What makes it good
 
@@ -15,7 +17,7 @@ Your photos never leave your machine. The only outward step is importing the fin
 - **AI or your own music** — Google **Lyria** (copyright-clean) or a track from your own library.
 - **AI cover card** — a generated title card (Nano Banana), full-frame 9:16.
 - **Auto self-review** — a Gemini critic flags oddball/duplicate/blurry shots and pacing problems *before* you watch it.
-- **Private by design** — reads your library read-only; nothing is uploaded.
+- **Local-first, no public uploads** — read-only on your library; editing/rendering happen on your Mac; only downscaled proxies/thumbnails go to Gemini for the AI steps (your key, or your own Vertex project).
 
 ## How it works
 
@@ -79,7 +81,7 @@ Built on Google **Gemini / Lyria / Nano Banana** (via the Gemini API or Vertex A
 
 ## Privacy
 
-On-device by design; your library is read-only and never uploaded. The only outward step is importing the finished reel back into your own Photos library. Cover cards and generated music are new AI assets — real photos are never generatively altered.
+Local-first, not fully offline. Your library is read **read-only**; selection, rendering, and the publish-back happen **on your Mac**, and nothing is ever posted publicly (the only "publish" is into your own Photos library). The AI steps do send data to Google: **downscaled video proxies, still thumbnails, and sampled frames** go to **Gemini** for clipping, directing, and self-review. You choose the channel — a **Gemini API key**, or your own **Vertex AI / Google Cloud project** to keep processing in your own tenancy (review Google's data-use terms for whichever you pick). Full-res originals and the final render stay local. Cover cards and generated music are new AI assets — your real photos are never generatively altered.
 
 ## License
 
