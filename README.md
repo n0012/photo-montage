@@ -15,7 +15,7 @@
 - **Chronological by EXIF** — a true multi-day story arc (the next morning lands after last night).
 - **Cinematic finish** — color grade + vignette, smooth continuous motion on stills, cross-dissolves, fades, loudness-normalized audio.
 - **AI or your own music** — Google **Lyria** (copyright-clean) or a track from your own library.
-- **AI cover card** — a generated title card (Nano Banana), full-frame 9:16.
+- **AI cover card, matched to your trip** — a title card (Nano Banana), full-frame 9:16, generated *last* and styled to the real setting the director saw in your photos (mountains, beach, city…), not a generic template.
 - **Auto self-review** — a Gemini critic flags oddball/duplicate/blurry shots and pacing problems *before* you watch it.
 - **Local-first, no public uploads** — read-only on your library; editing/rendering happen on your Mac; only downscaled proxies/thumbnails go to Gemini for the AI steps (your key, or your own Vertex project).
 
@@ -79,7 +79,13 @@ uv run scripts/select_photos.py --output-dir projects/tahoe --from-date 2026-08-
 
 ## Examples
 
-- [`examples/run-via-agy.sh`](examples/run-via-agy.sh) — one command to drive the whole skill **headlessly via the Antigravity CLI (`agy`)**: `./run-via-agy.sh` (or pass your own request). Streams a log, saves the mp4, opens it when done.
+- [`examples/run-via-agy.sh`](examples/run-via-agy.sh) — one command to drive the whole skill **headlessly via the Antigravity CLI (`agy`)**: `./run-via-agy.sh` (or pass your own request). Streams a log, saves the mp4, opens it when done. It shows the two touches that make a reel feel produced: a **cover the agent styles from your actual photos**, and **your own soundtrack** — set `MONTAGE_MUSIC=/path/to/track.mp3` to score with your track instead of AI-generated Lyria.
+
+  ```bash
+  ./examples/run-via-agy.sh                                   # last 7 days, Lyria score
+  MONTAGE_MUSIC=~/Music/song.mp3 ./examples/run-via-agy.sh    # your own track
+  ./examples/run-via-agy.sh "Make a reel from my Vail trip"   # your own request
+  ```
 
 ## Inspiration & credits
 

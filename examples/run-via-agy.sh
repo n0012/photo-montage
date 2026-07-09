@@ -16,6 +16,7 @@
 # Optional env:
 #   WORKDIR=/path/to/out                   # where the mp4 + log land (default ~/photo-montage-out)
 #   PHOTO_MONTAGE_SHARED_ALBUMS="Family"   # also pull from these shared iCloud albums
+#   MONTAGE_MUSIC=/path/to/track.mp3       # score with YOUR OWN track instead of AI (Lyria)
 #
 # Note: --dangerously-skip-permissions lets agy run the skill's uv/ffmpeg steps
 # without prompting. It's your call to enable it; drop it to approve each step.
@@ -27,7 +28,24 @@ WORKDIR="${WORKDIR:-$HOME/photo-montage-out}"
 mkdir -p "$WORKDIR"; cd "$WORKDIR"
 LOG="$WORKDIR/agy-run-$(date +%Y%m%d-%H%M%S).log"
 
-DEFAULT_PROMPT='Use the photo-montage skill to make a cinematic ~40-second vertical (9:16) montage from my most recent Apple Photos (the last 7 days). Steps: select_photos.py (add --download-missing if originals are iCloud-only); clip_videos.py so Gemini trims videos to their best moments; consolidate.py then plan_edit.py (Gemini director) to pick and order shots (let it choose ~40s); make_music.py for a fitting bed (Lyria ok); build_reel.py cinematic: --grade cinematic --vignette --cinematic-motion --dissolve 0.6 --fade-in 0.6 --fade-out 2.5 --loudnorm. Save the final mp4 in this directory and do NOT publish to Photos. Print the ABSOLUTE PATH to the final mp4 on its own line.'
+# Music: your own track (MONTAGE_MUSIC) if set, otherwise AI-generated (Lyria).
+if [ -n "${MONTAGE_MUSIC:-}" ]; then
+  MUSIC_STEP="use MY OWN track as the bed, NOT Lyria: ${MONTAGE_MUSIC} (pass it to build_reel via --music)."
+  MUSIC_FLAG=" --music ${MONTAGE_MUSIC}"
+else
+  MUSIC_STEP="run make_music.py for a fitting bed (Google Lyria is fine)."
+  MUSIC_FLAG=""
+fi
+
+DEFAULT_PROMPT="Use the photo-montage skill to make a cinematic ~40-second vertical (9:16) montage from my most recent Apple Photos (the last 7 days).
+Steps:
+1. select_photos.py (add --download-missing if originals are iCloud-only; it also reads PHOTO_MONTAGE_SHARED_ALBUMS for shared iCloud albums).
+2. clip_videos.py so Gemini trims each video to its best moment(s).
+3. consolidate.py, then plan_edit.py (Gemini director) to pick and order shots into a chronological story (let the director choose the duration, ~40s).
+4. MUSIC - ${MUSIC_STEP}
+5. COVER - do this LAST, after the story is planned. First LOOK AT several of the selected photos to judge the real setting (place, landscape, season, vibe), then generate the title card with make_titlecard.py so its scene MATCHES this trip - put that setting in --style, with a short --text title and a --subtitle for the place/date. Prepend the finished card as the FIRST shot (type image, ~3.5s hold, gentle push_in) before the final build.
+6. build_reel.py cinematic: --grade cinematic --vignette --cinematic-motion --dissolve 0.6 --fade-in 0.6 --fade-out 2.5 --loudnorm${MUSIC_FLAG}.
+Save the final mp4 in this directory and do NOT publish to Photos. Print the ABSOLUTE PATH to the final mp4 on its own line."
 PROMPT="${1:-$DEFAULT_PROMPT}"
 
 command -v agy >/dev/null || { echo "✗ agy not found on PATH ($HOME/.local/bin). Install: curl -fsSL https://antigravity.google/cli/install.sh | bash"; exit 1; }
@@ -44,10 +62,12 @@ status=${PIPESTATUS[0]}
 echo
 echo "──────────────────────────────────────────────"
 echo "agy exit status: $status   |   log: $LOG"
-mp4=$(ls -1t "$WORKDIR"/*.mp4 2>/dev/null | head -1 || true)
+# agy may save into its own scratch dir instead of WORKDIR — look in both.
+mp4=$(ls -1t "$WORKDIR"/*.mp4 "$HOME"/.gemini/antigravity-cli/scratch/*.mp4 2>/dev/null | head -1 || true)
 if [ -n "$mp4" ]; then
+  case "$mp4" in "$WORKDIR"/*) : ;; *) cp "$mp4" "$WORKDIR/"; mp4="$WORKDIR/$(basename "$mp4")" ;; esac
   echo "✓ final mp4: $mp4"
   command -v open >/dev/null && open "$mp4"
 else
-  echo "⚠ no mp4 in $WORKDIR — check the log above"
+  echo "⚠ no mp4 found in $WORKDIR or agy scratch — check the log above"
 fi
