@@ -39,11 +39,11 @@ the shared env config.
 | `select_photos.py` | Query library (dates/albums/persons/**shared albums**), rank by Apple aesthetic score, cull screenshots/bursts/**mechanical (AC/engine) shots**, HEIC→JPG, `--download-missing` (PhotoKit) → JSON + thumbnails | local |
 | `clip_videos.py` | **Gemini** → best segment(s) per video, ffmpeg-trims originals | key / ADC |
 | `consolidate.py` | Merge **all** photo+segment manifests in a workspace → one deduped pool | local |
-| `plan_edit.py` | **Gemini "director"** → ordered edit plan (selection, holds, motion, transitions, **chosen duration**, vibe, music prompt, narration, slideshow-risk) | key / ADC |
+| `plan_edit.py` | **Gemini "director"** → edit plan (selection, holds, motion, transitions, **chosen duration**, vibe, music prompt, narration, slideshow-risk); uses EXIF date/place/**labels**/aspect; enforces **chronological order** (`--strict-chronological`, default on) | key / ADC |
 | `make_titlecard.py` | **Nano Banana** cover card, full-frame 9:16 (no crop) | key / ADC |
 | `make_music.py` | **Lyria** text-to-music, or fit a library track | ADC |
 | `analyze_audio.py` | librosa beats (optional; omit for cinematic) | local |
-| `smart_crop.py` | Subject-aware (face) crop for vertical | local |
+| `smart_crop.py` | Subject-aware crop for vertical: frontal+profile **face**, **upper-body**, then **detail-saliency** fallback, with headroom | local |
 | `make_voiceover.py` | Narration WAV (optional): Gemini TTS / Cloud TTS | key / ADC |
 | `build_reel.py` | Assemble → grade, vignette, cinematic motion, dissolves, fades, music/VO, loudnorm | local |
 | `review_reel.py` | **Auto self-review**: Gemini critiques sampled frames (mechanical/dupe/blurry, pacing, ending) + slideshow-risk | key / ADC |
@@ -91,10 +91,15 @@ copyright-clean). *Copyright:* a commercial track is fine for a personal/Photos
 reel; for social it may be muted — export music-free + add in-app, or use Lyria.
 
 ### 5. Order chronologically by EXIF, pin the finale
-Order selected shots by **EXIF capture time** (parse tz), not the director's
-guess — fixes multi-day arcs (next-morning shots land after the prior night).
-Place the chosen closer last (the user may name it, e.g. a wide lake/mountain
-vista). Prepend the cover.
+`plan_edit.py` now enforces this automatically: every candidate — stills **and
+clips** — carries EXIF capture time, and `--strict-chronological` (default ON)
+stable-sorts the final timeline by capture date, so multi-day arcs come out right
+(the next-morning boat trip lands *after* the prior night's fireworks, not
+before). It also feeds the director EXIF **place + Apple scene `labels`** to group
+scenes/pick establishing shots, and **orientation → aspect/portrait** to prefer
+full-frame portrait shots for the 9:16 reel. Use `--no-strict-chronological` only
+for a deliberately non-linear cut. Place the chosen closer last (the user may name
+it, e.g. a wide lake/mountain vista); the cover is prepended in step 6.
 
 ### 6. Cover LAST, from the finished story
 First **look at the selected photos** to read the reel's *real* setting — the

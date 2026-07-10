@@ -39,8 +39,31 @@ import _env
 import re
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
+
+
+def _ts(date_str) -> Optional[float]:
+    """Parse an ISO date string to a sortable epoch, or None."""
+    if not date_str:
+        return None
+    try:
+        return datetime.fromisoformat(str(date_str)).timestamp()
+    except (ValueError, TypeError):
+        return None
+
+
+def _aspect(w, h, orientation=None) -> Optional[float]:
+    """True display aspect (w/h), accounting for EXIF rotation (orientations 5-8 swap axes)."""
+    if not w or not h:
+        return None
+    if orientation in (5, 6, 7, 8):
+        w, h = h, w
+    try:
+        return round(w / h, 2)
+    except ZeroDivisionError:
+        return None
 
 MOTIONS = ["push_in", "pull_out", "drift_left", "drift_right", "none"]
 
@@ -58,10 +81,19 @@ padded {dur_max}s one. Put your choice in recommended_duration_seconds.
 
 Then produce a tasteful, professionally-edited plan:
 - SELECT the strongest shots that flow together (cull weak/dupe/blurry).
-- ORDER them into a story — usually chronological; open on an establishing/hook
-  shot, build, hit peaks, wind down.
+- ORDER them CHRONOLOGICALLY by the `date` in each item's metadata (earliest
+  first). Items group into day/place scenes — keep whole scenes in time order and
+  NEVER place a later-dated shot before an earlier one (e.g. a next-day boat trip
+  must come AFTER the prior night's fireworks). Within a single scene, arrange for
+  flow: open on an establishing/hook shot, build, hit peaks, wind down.
 - VARIETY: never place two near-identical shots adjacent; alternate wide/detail
   and people/place; mix videos and photos.
+- FORMAT: this is a 9:16 VERTICAL reel. Prefer shots with meta portrait:true —
+  they fill the frame; portrait:false (landscape) shots get cropped, so use them
+  sparingly, mainly as brief establishing beats.
+- SCENES: use `labels` (Apple's on-device scene tags, e.g. "Fireworks", "Boat",
+  "Mountain") together with `place`/`date` to recognize distinct scenes and pick
+  strong establishing shots to open each one.
 - HOLD per shot in seconds (heroes ~3-4s, connective ~1.5-2s) so the total ≈
   recommended_duration_seconds.
 - MOTION per still: push_in, pull_out, drift_left, drift_right, none. Video
@@ -112,20 +144,27 @@ def load_candidates(args, workdir: Path) -> list[dict[str, Any]]:
         d = json.loads(Path(args.from_select).expanduser().read_text(encoding="utf-8"))
         for it in d.get("items", []):
             thumb = it.get("thumbnail") or it.get("path")
+            asp = _aspect(it.get("width"), it.get("height"), it.get("orientation"))
             cands.append({
                 "path": it["path"], "type": it["type"], "image": thumb,
                 "meta": {"score": it.get("aesthetic_score"), "date": it.get("date"),
                          "place": it.get("place"), "persons": it.get("persons"),
-                         "moment": (it.get("moment") or {}).get("title")},
+                         "moment": (it.get("moment") or {}).get("title"),
+                         "labels": (it.get("labels") or [])[:6],
+                         "aspect": asp, "portrait": (asp is not None and asp < 1.0)},
             })
     if args.segments:
         d = json.loads(Path(args.segments).expanduser().read_text(encoding="utf-8"))
         for i, s in enumerate(d.get("segments", [])):
             frame = frame_from_video(Path(s["path"]), workdir / f"segframe_{i}.jpg")
+            asp = _aspect(s.get("width"), s.get("height"), s.get("orientation"))
             cands.append({
                 "path": s["path"], "type": "video", "image": str(frame) if frame else None,
                 "meta": {"scene": s.get("scene"), "why": s.get("reason"),
-                         "score": s.get("score"), "duration": s.get("duration")},
+                         "score": s.get("score"), "duration": s.get("duration"),
+                         "date": s.get("date"), "place": s.get("place"),
+                         "labels": (s.get("labels") or [])[:6],
+                         "aspect": asp, "portrait": (asp is not None and asp < 1.0)},
             })
     return cands
 
@@ -153,6 +192,9 @@ def main() -> int:
     ap.add_argument("--brief", default="", help="Extra creative direction (tone/audience/hook).")
     ap.add_argument("--model", default=os.environ.get("PHOTO_MONTAGE_GEMINI_MODEL", "gemini-3.5-flash"))
     ap.add_argument("--plan-out", help="Write the edit plan JSON here.")
+    ap.add_argument("--strict-chronological", action=argparse.BooleanOptionalAction, default=True,
+                    help="Force the final timeline into chronological order by capture date "
+                         "(default on). Use --no-strict-chronological to let the model's order stand.")
     ap.add_argument("--skip-existing", action="store_true",
                     help="If --plan-out already exists, reuse it instead of re-calling Gemini (resume).")
     args = ap.parse_args()
@@ -225,7 +267,13 @@ def main() -> int:
                 "path": c["path"], "type": c["type"],
                 "hold": float(s.get("hold", 2.5)), "motion": motion,
                 "transition": s.get("transition", "cut"), "reason": s.get("reason", ""),
+                "date": c["meta"].get("date"),
             })
+
+    # Deterministic safety net: guarantee chronological order regardless of the model's
+    # ordering (undated items sort to the end, original order preserved among ties).
+    if getattr(args, "strict_chronological", True):
+        shots.sort(key=lambda sh: (_ts(sh.get("date")) is None, _ts(sh.get("date")) or 0.0))
 
     n = len(shots) or 1
     vids = sum(1 for s in shots if s["type"] == "video")

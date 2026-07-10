@@ -44,6 +44,40 @@ def crop_for(img_w: int, img_h: int, target_ratio: float, cx: float, cy: float) 
     return {"x": x, "y": y, "w": w, "h": h}
 
 
+def detect_subject(img, face_cascades, body_cascades):
+    """Find the subject center. Try frontal+profile faces, then upper body, then a
+    detail-energy ("where's the interesting stuff") fallback — better than a blind
+    upper-third guess for landscapes with no people. Returns (cx, cy, n_faces)."""
+    import cv2
+    h, w = img.shape[:2]
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    boxes = []
+    for cas in face_cascades:
+        for b in cas.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)):
+            boxes.append(tuple(int(v) for v in b))
+    n_faces = len(boxes)
+    if not boxes:  # no faces — try upper body
+        for cas in body_cascades:
+            for b in cas.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(60, 120)):
+                boxes.append(tuple(int(v) for v in b))
+
+    if boxes:
+        cxs = [x + bw / 2 for (x, y, bw, bh) in boxes]
+        cys = [y + bh / 2 for (x, y, bw, bh) in boxes]
+        return sum(cxs) / len(cxs), sum(cys) / len(cys), n_faces
+
+    # Detail-energy saliency (core-cv2 only): Laplacian magnitude, heavily blurred,
+    # take the peak — centers on the most textured/interesting region.
+    try:
+        lap = cv2.convertScaleAbs(cv2.Laplacian(gray, cv2.CV_16S, ksize=3))
+        energy = cv2.GaussianBlur(lap, (0, 0), sigmaX=max(w, h) / 25.0)
+        _, _, _, maxloc = cv2.minMaxLoc(energy)
+        return float(maxloc[0]), float(maxloc[1]), 0
+    except Exception:
+        return w / 2, h * 0.42, 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Subject-aware crop windows for reframing.")
     ap.add_argument("--images", nargs="+", required=True)
@@ -60,13 +94,16 @@ def main() -> int:
     # Face detection is best-effort. If the cascade can't load (wheel/version
     # quirk), fall back to a heuristic upper-third crop rather than failing —
     # a reframed reel is still better than a hard error.
-    cascade = None
-    try:
-        cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-        if cascade.empty():
-            cascade = None
-    except Exception:
-        cascade = None
+    def load_cascade(name):
+        try:
+            c = cv2.CascadeClassifier(cv2.data.haarcascades + name)
+            return None if c.empty() else c
+        except Exception:
+            return None
+
+    face_cascades = [c for c in (load_cascade("haarcascade_frontalface_default.xml"),
+                                 load_cascade("haarcascade_profileface.xml")) if c]
+    body_cascades = [c for c in (load_cascade("haarcascade_upperbody.xml"),) if c]
 
     ratio = ASPECTS[args.aspect]
     crop_map: dict[str, dict] = {}
@@ -77,19 +114,12 @@ def main() -> int:
         if img is None:
             continue
         h, w = img.shape[:2]
-        faces = []
-        if cascade is not None:
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40))
-        if len(faces):
-            # Centre on the union of detected faces.
-            xs = [x + fw / 2 for (x, y, fw, fh) in faces]
-            ys = [y + fh / 2 for (x, y, fw, fh) in faces]
-            cx, cy = sum(xs) / len(xs), sum(ys) / len(ys)
-        else:
-            # No face: bias slightly above centre (where subjects usually sit).
-            cx, cy = w / 2, h * 0.42
-        crop_map[str(p)] = crop_for(w, h, ratio, cx, cy) | {"faces": int(len(faces))}
+        cx, cy, n_faces = detect_subject(img, face_cascades, body_cascades)
+        # Headroom: with a person, nudge the crop down slightly so the subject
+        # lands in the upper third (more natural than dead-centre).
+        if n_faces:
+            cy += 0.06 * h
+        crop_map[str(p)] = crop_for(w, h, ratio, cx, cy) | {"faces": int(n_faces)}
 
     if args.out:
         Path(args.out).expanduser().write_text(json.dumps(crop_map, indent=2), encoding="utf-8")

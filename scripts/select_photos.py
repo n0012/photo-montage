@@ -127,9 +127,13 @@ def build_record(photo, asset_path: Path) -> dict[str, Any]:
     moment = getattr(photo, "moment", None)
     moment_info = None
     if moment is not None:
+        m_start = getattr(moment, "start_date", None)
+        m_loc = getattr(moment, "location", None) or (None, None)
         moment_info = {
             "title": getattr(moment, "title", None),
             "subtitle": getattr(moment, "subtitle", None),
+            "start_date": m_start.isoformat() if m_start is not None else None,
+            "location": {"lat": m_loc[0], "lon": m_loc[1]} if m_loc and m_loc[0] is not None else None,
         }
     date = getattr(photo, "date", None)
     record: dict[str, Any] = {
@@ -149,6 +153,7 @@ def build_record(photo, asset_path: Path) -> dict[str, Any]:
         "moment": moment_info,
         "width": getattr(photo, "width", None),
         "height": getattr(photo, "height", None),
+        "orientation": getattr(photo, "orientation", None),
         "aesthetic_score": round(overall_score(photo), 4),
         "is_screenshot": bool(getattr(photo, "screenshot", False)),
         "is_selfie": bool(getattr(photo, "selfie", False)),
