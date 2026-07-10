@@ -104,13 +104,18 @@ vista). Prepend the cover.
 ```
 build_reel.py --manifest order.json --output reel.mp4 --aspect vertical \
   --grade cinematic --vignette --cinematic-motion \
-  --dissolve 0.6 --fade-in 0.6 --fade-out 2.5 \
+  --dissolve 0.6 --fade-in 0 --fade-out 2.5 \
   --crop-map crops.json --music track.mp3 --loudnorm
 ```
 Cinematic: drop `--beats-file` (let holds breathe), `--dissolve 0.5–0.7`,
 `--cinematic-motion`, `--grade cinematic --vignette`, long `--fade-out`;
 `--hold-scale 1.2+` slows further. Punchy/social: add `--beats-file`, shorter
 dissolves.
+
+**Open on the cover, not black:** when the first shot is the title card, keep
+`--fade-in 0`. Social platforms (YouTube/Reels/TikTok) grab the **first frame**
+as the thumbnail — a fade-from-black posts as a blank/black thumbnail, so let the
+splash cover be frame one. (Fade-*out* to black at the end is fine.)
 
 ### 8. Self-review, then deliver
 `review_reel.py --reel reel.mp4 --order order.json` → act on `verdict:"fix"`

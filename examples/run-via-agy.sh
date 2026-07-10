@@ -50,7 +50,7 @@ Steps:
 3. consolidate.py, then plan_edit.py (Gemini director) to pick and order shots into a chronological story (let the director choose the duration, ~40s).
 4. MUSIC - ${MUSIC_STEP}
 5. COVER - do this LAST, after the story is planned. First LOOK AT several of the selected photos to judge the real setting (place, landscape, season, vibe), then generate the title card with make_titlecard.py so its scene MATCHES this trip - put that setting in --style, with a short --text title and a --subtitle for the place/date. Prepend the finished card as the FIRST shot (type image, ~3.5s hold, gentle push_in) before the final build.
-6. build_reel.py cinematic: --grade cinematic --vignette --cinematic-motion --dissolve 0.6 --fade-in 0.6 --fade-out 2.5 --loudnorm${MUSIC_FLAG}.
+6. build_reel.py cinematic: --grade cinematic --vignette --cinematic-motion --dissolve 0.6 --fade-in 0 --fade-out 2.5 --loudnorm${MUSIC_FLAG}.
 Save the final mp4 in this directory and do NOT publish to Photos. Print the ABSOLUTE PATH to the final mp4 on its own line."
 PROMPT="${1:-$DEFAULT_PROMPT}"
 
