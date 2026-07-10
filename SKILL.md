@@ -56,8 +56,9 @@ the shared env config.
 
 ### 0. Preflight + workspace
 `preflight.py --pool <N>` → confirm capabilities + get the recommended model
-(`gemini-3.1-pro-preview` for pools >~60). Pick a **workspace**:
-`projects/<event>/` — send every `--output-dir` under it so nothing scatters.
+(`gemini-3.1-pro-preview` for pools >~60). Pick a **workspace** under
+`~/Pictures/photo-montage/<event>/` (e.g. `~/Pictures/photo-montage/fourth-of-july/`) — send every
+`--output-dir` there so nothing scatters and cleanup is one directory.
 **Resume:** stage outputs persist; pass `--skip-existing` to
 `plan_edit`/`build_reel` (and downloads in `select_photos`) to skip redone work.
 
@@ -78,7 +79,7 @@ pass flags anything genuinely off-story.
 `clip_videos.py --from-select videos.json --output-dir clips/`.
 
 ### 3. Consolidate → director → storyboard (sign off BEFORE rendering)
-`consolidate.py --workspace projects/<event>` merges ALL candidates into one
+`consolidate.py --workspace ~/Pictures/photo-montage/<event>` merges ALL candidates into one
 deduped pool. Then `plan_edit.py --from-select all_photos.json --segments
 all_segments.json --min-duration 60 --max-duration 90 --brief "<tone/arc>"` →
 Gemini picks shots/holds/motion/transitions, the **ideal duration**, a
