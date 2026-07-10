@@ -115,3 +115,15 @@ For the most private setup, use **Vertex AI** (`gcloud auth application-default 
 ## License
 
 [MIT](LICENSE)
+
+## Third-party & licensing
+
+`photo-montage` is MIT-licensed and **bundles no third-party code or binaries** — every dependency is installed at runtime under its own license, and external tools are invoked as separate programs:
+
+- **Python packages** (fetched by `uv` per script): osxphotos / photoscript (MIT), numpy / soundfile (BSD-3), google-genai / google-auth / google-cloud-* / requests / opencv-python-headless (Apache-2.0), librosa (ISC) — all permissive and MIT-compatible. `soundfile` wraps libsndfile (LGPL), used unmodified.
+- **FFmpeg** (`ffmpeg` / `ffprobe`) — you install it yourself (e.g. `brew install ffmpeg`, commonly a GPL build). The skill only calls it via the command line; it is **not linked into or redistributed with** this project, so its license does not affect this MIT code. Don't commit an FFmpeg binary into a fork.
+- **`sips`** — a built-in macOS tool, invoked via CLI.
+- **Google Gemini / Vertex AI / Lyria / Nano Banana** — cloud services governed by Google's Terms of Service (not an open-source license). Generated music/cover outputs are subject to those terms; any personal *commercial* music track you supply carries its own copyright.
+- **[Co-Director](https://co-director-agent.github.io/)** and **[OpenMontage](https://github.com/calesthio/OpenMontage)** are cited as inspiration only — no code is copied.
+
+Not legal advice — for commercial use, verify current upstream terms.
