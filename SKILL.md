@@ -79,11 +79,16 @@ storyboard** and adjust before building.
 
 ### 4. Music
 Prefer a local/mounted library at `PHOTO_MONTAGE_MUSIC_DIR` — pick a DRM-free
-track (`.mp3/.m4a/.flac`; skip `.m4p`) that fits the vibe and pass it to
-`build_reel --music`. (If it's on a NAS, mount the share first.) Fallbacks:
-`make_music.py --prompt "<mood>"` (Lyria, copyright-clean) or `--library-track`.
-*Copyright:* a commercial track is fine for a personal/Photos reel; for social it
-may be muted — export music-free + add in-app, or use Lyria.
+track (`.mp3/.m4a/.flac`; skip `.m4p`) that fits the vibe. For a full-length
+song, run it through `make_music.py --library-track <file> --duration <reel_s>`:
+it analyzes the track and lifts its **hook/chorus** (the strongest ~reel-length
+window, snapped to a nearby onset) and fits it to length, so the *recognizable*
+part lands on the reel instead of a slow intro — then pass that bed to
+`build_reel --music`. (Force a spot with `--music-start <s>`, or keep the top
+with `--from-start`. Handing a raw song straight to `build_reel --music` just
+uses it from 0:00.) No library? `make_music.py --prompt "<mood>"` (Lyria,
+copyright-clean). *Copyright:* a commercial track is fine for a personal/Photos
+reel; for social it may be muted — export music-free + add in-app, or use Lyria.
 
 ### 5. Order chronologically by EXIF, pin the finale
 Order selected shots by **EXIF capture time** (parse tz), not the director's
