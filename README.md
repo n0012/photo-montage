@@ -32,7 +32,7 @@ Each step is a small, self-contained `uv run` script in `scripts/`; the agent or
 ## Requirements
 
 - **macOS** with the Apple Photos app
-- [`uv`](https://docs.astral.sh/uv/) · `ffmpeg` (`brew install ffmpeg`) · `sips` (built-in)
+- [`uv`](https://docs.astral.sh/uv/) · [`ffmpeg`](https://ffmpeg.org/) (`brew install ffmpeg`) · `sips` (built-in)
 - Terminal **Full Disk Access** (read the library) and, to publish, **Automation → Photos**
 - An AI backend (either one):
   - **Vertex AI** via `gcloud auth application-default login` — *recommended for personal media* (your data isn't used for training; see [Privacy](#privacy)), **or**
@@ -96,7 +96,7 @@ This project stands on two shoulders:
 - **[Co-Director](https://co-director-agent.github.io/)** — a Google research project on *agentic generative video storytelling*, where a multi-agent system works like a film crew with a built-in auditor that catches inconsistencies **before** rendering (I was part of the Co-Director team). `photo-montage` brings that ethos — an agent that *directs* rather than *concatenates*, and reviews its own cut — down to everyday life: your Apple Photos, on your Mac.
 - **[OpenMontage](https://github.com/calesthio/OpenMontage)** — an open-source, agentic video-production system. Several patterns here were inspired by it: the director + **self-review** pass, a **slideshow-risk** score, and single-**workspace consolidation** so no candidate gets stranded.
 
-Built on Google **Gemini / Lyria / Nano Banana** (via the Gemini API or Vertex AI), [osxphotos](https://github.com/RhetTbull/osxphotos), and **FFmpeg**.
+Built on Google [**Gemini**](https://ai.google.dev/) / [**Lyria**](https://deepmind.google/models/lyria/) / [**Nano Banana**](https://ai.google.dev/gemini-api/docs/image-generation) (via the Gemini API or Vertex AI), [osxphotos](https://github.com/RhetTbull/osxphotos), and [**FFmpeg**](https://ffmpeg.org/).
 
 ## Privacy
 
@@ -121,7 +121,7 @@ For the most private setup, use **Vertex AI** (`gcloud auth application-default 
 `photo-montage` is MIT-licensed and **bundles no third-party code or binaries** — every dependency is installed at runtime under its own license, and external tools are invoked as separate programs:
 
 - **Python packages** (fetched by `uv` per script): osxphotos / photoscript (MIT), numpy / soundfile (BSD-3), google-genai / google-auth / google-cloud-* / requests / opencv-python-headless (Apache-2.0), librosa (ISC) — all permissive and MIT-compatible. `soundfile` wraps libsndfile (LGPL), used unmodified.
-- **FFmpeg** (`ffmpeg` / `ffprobe`) — you install it yourself (e.g. `brew install ffmpeg`, commonly a GPL build). The skill only calls it via the command line; it is **not linked into or redistributed with** this project, so its license does not affect this MIT code. Don't commit an FFmpeg binary into a fork.
+- [**FFmpeg**](https://ffmpeg.org/) (`ffmpeg` / `ffprobe`) — you install it yourself (e.g. `brew install ffmpeg`, commonly a GPL build). The skill only calls it via the command line; it is **not linked into or redistributed with** this project, so its license does not affect this MIT code. Don't commit an FFmpeg binary into a fork.
 - **`sips`** — a built-in macOS tool, invoked via CLI.
 - **Google Gemini / Vertex AI / Lyria / Nano Banana** — cloud services governed by Google's Terms of Service (not an open-source license). Generated music/cover outputs are subject to those terms; any personal *commercial* music track you supply carries its own copyright.
 - **[Co-Director](https://co-director-agent.github.io/)** and **[OpenMontage](https://github.com/calesthio/OpenMontage)** are cited as inspiration only — no code is copied.
