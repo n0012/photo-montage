@@ -175,6 +175,14 @@ Then `publish_photos.py --video reel.mp4 --album "<event>"`
 (defaults to `PHOTO_MONTAGE_ALBUM`), keep a durable copy, and write a
 `caption.txt` (caption + 3–8 hashtags) for social.
 
+**Offer cleanup when done (never auto-delete).** A run leaves a heavy workspace —
+exported media copies (with `--download-missing` on these can be GBs of iCloud
+originals), thumbnails, clipped segments, and intermediate reel takes. After
+delivering, *offer* to remove the **re-derivable** intermediates while keeping the
+**final reel**, the `plan.json`/manifest, and `caption.txt` (enough to re-render or
+tweak later). Only ever delete **workspace copies** — never the Photos library — and
+confirm before removing anything.
+
 ## The FINAL pass: consolidate EVERYTHING
 Before the final director run, `consolidate.py` sweeps the whole workspace so a
 shot clipped in one sub-batch never gets stranded (dedups photos by `(date,w,h)`,
