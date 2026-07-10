@@ -105,7 +105,14 @@ def make_still_clip(img: Path, out: Path, w: int, h: int, dur: float, fps: int,
         if sips_to_jpeg(img, norm):
             src = norm
     vf = kenburns_filter(w, h, dur, fps, motion, crop, grade_filter, zoom_rate, zoom_max)
-    return run(["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", str(src),
+    # -noautorotate: ffmpeg otherwise auto-rotates stills from the EXIF Orientation tag.
+    # osxphotos already bakes rotation into the exported pixels but can leave a STALE tag
+    # (e.g. a correctly-oriented landscape shot tagged orientation-8), so honoring the tag
+    # rotates a correct image 90° sideways. We trust the raw pixels — matching smart_crop,
+    # which reads raw via cv2 — so crop coords and render stay in the same space. (This
+    # flag is image-only; make_video_clip keeps autorotate, since video rotation metadata
+    # from phones is legitimate.)
+    return run(["ffmpeg", "-y", "-loglevel", "error", "-noautorotate", "-loop", "1", "-i", str(src),
                 "-t", f"{dur:.3f}", "-vf", vf, "-c:v", "libx264", "-pix_fmt", "yuv420p",
                 "-r", str(fps), str(out)]).returncode == 0 and out.exists()
 

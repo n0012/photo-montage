@@ -110,7 +110,14 @@ def main() -> int:
 
     for path in args.images:
         p = Path(path).expanduser()
-        img = cv2.imread(str(p))
+        # IMREAD_IGNORE_ORIENTATION: OpenCV 4.x otherwise AUTO-APPLIES the EXIF Orientation
+        # tag. osxphotos bakes rotation into the exported pixels but can leave a stale tag
+        # (e.g. a correct-landscape shot tagged orientation-8), so honoring it rotates a
+        # correct image and — worse — makes crop dims (computed in rotated space) exceed the
+        # raw frame, so build_reel's crop filter fails and the shot silently drops. We read
+        # RAW pixels here to stay in the exact space build_reel renders in (it uses
+        # -noautorotate for the same reason).
+        img = cv2.imread(str(p), cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_COLOR)
         if img is None:
             continue
         h, w = img.shape[:2]

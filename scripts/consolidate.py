@@ -15,7 +15,7 @@ nothing gets stranded in scattered batches):
 
 This walks the workspace, merges every photo manifest (photos.json /
 candidates.json / combined*.json) and every segment manifest (segments*.json),
-dedups, drops mechanical/non-event clips, and writes the merged pool. Run it
+dedups clips and writes the merged pool. Run it
 right before the final director pass so it considers EVERYTHING.
 
 (Learned the hard way: a great shot clipped in one batch got missed because the
@@ -37,7 +37,6 @@ from pathlib import Path
 
 PHOTO_NAMES = {"photos.json", "candidates.json"}
 PHOTO_PREFIX = "combined"
-MECH = ("ac unit", "air condition", "hvac", "engine", "motor", "appliance", "machine")
 
 
 def find_manifests(roots: list[Path]):
@@ -91,14 +90,11 @@ def main() -> int:
                 continue
             seen.add(k); photos.append(it)
 
-    # segments: dedup by source basename (keep highest score), drop mechanical
+    # segments: dedup by source basename (keep highest score)
     best = {}
     for m in sm:
         for s in load(m).get("segments", []):
             if not os.path.exists(s.get("path", "")):
-                continue
-            blob = (s.get("scene", "") + " " + s.get("reason", "")).lower()
-            if any(t in blob for t in MECH):
                 continue
             base = os.path.basename(s.get("source", "")).split(".")[0]
             if base and (base not in best or s.get("score", 0) > best[base].get("score", 0)):

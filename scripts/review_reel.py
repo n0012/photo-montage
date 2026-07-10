@@ -6,13 +6,16 @@
 
 Samples frames across the rendered reel, sends them (each labeled with its
 timecode) to Gemini, and asks for problems a human editor would catch:
-mechanical/equipment shots (AC units, engines), near-duplicates, blurry/weak
-frames, pacing that's too fast or too slow, and a weak ending. Also computes a
-local slideshow-risk score from the plan. Returns JSON so the agent can fix
-issues (e.g. drop the flagged shot) before finalizing.
+off-story/irrelevant shots (judged against the reel's subject), near-duplicates,
+blurry/weak frames, pacing that's too fast or too slow, a weak ending, and — since it sees the
+FINAL rendered frames — shots that are visibly rotated/sideways (an orientation
+safety net for EXIF bugs deterministic handling can miss; reported as flags with a
+rotation direction + confidence, for the agent to confirm, not auto-apply). Also
+computes a local slideshow-risk score from the plan. Returns JSON so the agent can
+fix issues (e.g. drop the flagged shot) before finalizing.
 
-This is what would have caught the boat-engine (~55s) and AC unit (~1:13)
-automatically instead of by eye.
+This is what would have caught an off-story boat-engine or AC-unit shot in a family
+trip reel, and a sideways-rendered box, automatically instead of by eye.
 
 Usage:
     uv run review_reel.py --reel reel.mp4 --order order.json
@@ -83,11 +86,27 @@ PROMPT = """You are a picky video editor reviewing a family memory reel before r
 The images are frames sampled from the reel, each labeled with its timecode.
 Identify problems a good editor would fix. Return ONLY JSON:
 {"verdict": "ship" | "fix",
- "issues": [{"time_s": <number>, "problem": "<what's wrong: mechanical/equipment shot, near-duplicate, blurry, off-tone, etc.>", "fix": "<drop it / replace / trim>"}],
+ "issues": [{"time_s": <number>, "problem": "<what's wrong: off-story/irrelevant shot, near-duplicate, blurry, off-tone, etc.>", "fix": "<drop it / replace / trim>"}],
+ "orientation": [{"time_s": <number>, "direction": "cw|ccw|180", "confidence": "high|medium|low", "note": "<why it looks rotated>"}],
  "pacing": "<too fast | good | too slow>",
  "ending": "<does it end on a strong, calm closer? issues?>",
  "notes": "<one-line overall>"}
-Be specific with time_s. Flag ANY shot of equipment/machinery (AC units, engines, motors), duplicates, or blurry frames."""
+Be specific with time_s. Flag shots that are OFF-STORY / irrelevant to this reel's
+subject, near-duplicates, or blurry/weak frames. Judge by the STORY: infer the reel's
+subject from the surrounding shots, and flag a shot only when it's genuinely unrelated
+to that subject — NOT merely for its content type. The same kind of shot can be
+off-story in one reel and the whole point in another, so don't penalize a shot just for
+what it depicts.
+
+ORIENTATION CHECK (these are RENDERED frames — what actually ships): if a shot is
+visibly ROTATED — text/logos running vertically, faces or a person sideways, the
+horizon vertical, a table/floor on a side wall — add it to "orientation" with the
+rotation that would make it upright ("cw" = rotate clockwise, "ccw" =
+counter-clockwise, "180" = flip). This catches orientation bugs that survive to the
+final render. Guard against FALSE POSITIVES: do NOT flag genuine top-down / flat-lay
+shots, aerials, or abstract close-ups where "up" is truly ambiguous — only clear
+cases. Give "high" confidence only when it's unmistakable. Set verdict "fix" if any
+high-confidence orientation problem exists. Empty list [] if all shots are upright."""
 
 
 def main() -> int:
