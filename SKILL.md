@@ -97,8 +97,14 @@ Place the chosen closer last (the user may name it, e.g. a wide lake/mountain
 vista). Prepend the cover.
 
 ### 6. Cover LAST, from the finished story
-`make_titlecard.py --text "<title for the whole event>" --subtitle "<date>"
---style "<vibe>"` — full-frame 9:16, no crop.
+First **look at the selected photos** to read the reel's *real* setting — the
+specific place/landscape/season you actually see (mountains vs. beach vs. city,
+golden hour, snow, etc.) — and put THAT in `--style` so the card matches the
+trip, not a generic template. `make_titlecard.py --text "<title for the whole
+event>" --subtitle "<place · date>" --style "<the real setting you saw, e.g.
+'rugged Gore Range peaks above Vail at golden hour, alpine summer meadow'>"` —
+full-frame 9:16, no crop. This card becomes the reel's **opening frame** (§7
+`--fade-in 0`), i.e. the social thumbnail — so make it strong.
 
 ### 7. Build — cinematic recipe
 ```

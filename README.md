@@ -14,8 +14,8 @@
 - **Gemini directs the edit** — reviews every candidate, picks and orders the shots, chooses the ideal length the material earns (it won't pad).
 - **Chronological by EXIF** — a true multi-day story arc (the next morning lands after last night).
 - **Cinematic finish** — color grade + vignette, smooth continuous motion on stills, cross-dissolves, fades, loudness-normalized audio.
-- **AI or your own music** — Google **Lyria** (copyright-clean) or a track from your own library.
-- **AI cover card, matched to your trip** — a title card (Nano Banana), full-frame 9:16, generated *last* and styled to the real setting the director saw in your photos (mountains, beach, city…), not a generic template.
+- **AI or your own music, cut to the hook** — Google **Lyria** (copyright-clean), or a track from your own library that it auto-trims to the **chorus/hook** so the recognizable part lands on the reel, not a slow intro.
+- **AI cover card, matched to your trip** — a title card (Nano Banana), full-frame 9:16, generated *last* and styled to the real setting the director saw in your photos (mountains, beach, city…), not a generic template. It's also the reel's **opening frame**, so your social thumbnail is the cover — never a black fade-in.
 - **Auto self-review** — a Gemini critic flags oddball/duplicate/blurry shots and pacing problems *before* you watch it.
 - **Local-first, no public uploads** — read-only on your library; editing/rendering happen on your Mac; only downscaled proxies/thumbnails go to Gemini for the AI steps (your key, or your own Vertex project).
 
