@@ -98,13 +98,34 @@ def trim(src: Path, out: Path, start: float, end: float) -> bool:
                 "-c:a", "aac", "-movflags", "+faststart", str(out)]).returncode == 0 and out.exists()
 
 
-def gather_videos(args) -> list[Path]:
+def gather_videos(args):
+    """Return [(Path, source_meta)] where source_meta carries date/place/location
+    from the select manifest so clips can be ordered/grouped chronologically."""
     if args.videos:
-        return [Path(v).expanduser() for v in args.videos]
+        return [(Path(v).expanduser(), {}) for v in args.videos]
     data = json.loads(Path(args.from_select).expanduser().read_text(encoding="utf-8"))
     items = data.get("items", data) if isinstance(data, dict) else data
-    return [Path(it["path"]) for it in items
-            if isinstance(it, dict) and it.get("type") == "video" and it.get("path")]
+    out = []
+    for it in items:
+        if isinstance(it, dict) and it.get("type") == "video" and it.get("path"):
+            out.append((Path(it["path"]), {
+                "date": it.get("date"),
+                "place": it.get("place"),
+                "location": it.get("location"),
+                "labels": it.get("labels"),
+                "width": it.get("width"),
+                "height": it.get("height"),
+                "orientation": it.get("orientation"),
+            }))
+    return out
+
+
+def probe_creation_time(path):
+    """Fallback capture time from container metadata (for raw --videos with no manifest date)."""
+    cp = run(["ffprobe", "-v", "quiet", "-show_entries", "format_tags=creation_time",
+              "-of", "default=nokey=1:noprint_wrappers=1", str(path)])
+    val = (cp.stdout or "").strip()
+    return val or None
 
 
 # ---- Auth backends ---------------------------------------------------------
@@ -246,7 +267,7 @@ def main() -> int:
         }, indent=2))
         return 3
 
-    videos = [v for v in gather_videos(args) if v.exists()]
+    videos = [(v, m) for (v, m) in gather_videos(args) if v.exists()]
     output_dir = Path(args.output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
     proxies_dir = output_dir / "_proxies"
@@ -254,7 +275,8 @@ def main() -> int:
     segments: list[dict[str, Any]] = []
     errors: list[dict[str, Any]] = []
 
-    for vid in videos:
+    for vid, vmeta in videos:
+        seg_date = vmeta.get("date") or probe_creation_time(vid)
         duration = probe_duration(vid)
         proxy = proxies_dir / (vid.stem + ".mp4")
         if not make_proxy(vid, proxy, args.proxy_height):
@@ -284,6 +306,9 @@ def main() -> int:
                 "source": str(vid), "path": str(out),
                 "start": round(start, 2), "end": round(end, 2), "duration": round(end - start, 2),
                 "reason": seg.get("reason", ""), "score": score, "scene": scene, "type": "video",
+                "date": seg_date, "place": vmeta.get("place"), "location": vmeta.get("location"),
+                "labels": vmeta.get("labels"), "width": vmeta.get("width"),
+                "height": vmeta.get("height"), "orientation": vmeta.get("orientation"),
             })
 
     try:

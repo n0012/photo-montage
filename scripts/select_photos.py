@@ -30,6 +30,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
+import _env
+
 
 # --------------------------------------------------------------------------
 # Metadata helpers
@@ -97,25 +99,20 @@ def convert_to_jpeg(heic_path: Path) -> Optional[Path]:
 def extract_thumbnail(asset_path: Path, thumb_path: Path, kind: str) -> None:
     thumb_path.parent.mkdir(parents=True, exist_ok=True)
     if kind == "image":
+        # Use sips for stills: it HONORS the EXIF Orientation tag (ffmpeg does not),
+        # so the director sees an upright thumbnail instead of a sideways one.
+        r = subprocess.run(["sips", "-Z", "640", "-s", "format", "jpeg",
+                            str(asset_path), "--out", str(thumb_path)],
+                           capture_output=True, timeout=30)
+        if r.returncode == 0 and thumb_path.exists():
+            return
+        # Fallback to ffmpeg if sips is unavailable/fails.
         cmd = ["ffmpeg", "-y", "-i", str(asset_path), "-vframes", "1",
                "-vf", "scale=640:-1", "-q:v", "3", str(thumb_path)]
     else:
         cmd = ["ffmpeg", "-y", "-ss", "1", "-i", str(asset_path),
                "-frames:v", "1", "-vf", "scale=640:-1", "-q:v", "3", str(thumb_path)]
     subprocess.run(cmd, capture_output=True, timeout=30)
-
-
-# Apple ML labels that mark odd, non-montage "equipment" shots (AC units,
-# engines, appliances) that the director occasionally keeps. Dropped by default.
-MECHANICAL_LABELS = {
-    "air conditioner", "electric fan", "mechanical fan", "machine", "appliance",
-    "motor", "engine", "heater", "furnace", "generator", "pump",
-}
-
-
-def _is_mechanical(photo) -> bool:
-    labels = {str(l).lower() for l in (getattr(photo, "labels", None) or [])}
-    return bool(labels & MECHANICAL_LABELS)
 
 
 def build_record(photo, asset_path: Path) -> dict[str, Any]:
@@ -127,9 +124,13 @@ def build_record(photo, asset_path: Path) -> dict[str, Any]:
     moment = getattr(photo, "moment", None)
     moment_info = None
     if moment is not None:
+        m_start = getattr(moment, "start_date", None)
+        m_loc = getattr(moment, "location", None) or (None, None)
         moment_info = {
             "title": getattr(moment, "title", None),
             "subtitle": getattr(moment, "subtitle", None),
+            "start_date": m_start.isoformat() if m_start is not None else None,
+            "location": {"lat": m_loc[0], "lon": m_loc[1]} if m_loc and m_loc[0] is not None else None,
         }
     date = getattr(photo, "date", None)
     record: dict[str, Any] = {
@@ -149,6 +150,7 @@ def build_record(photo, asset_path: Path) -> dict[str, Any]:
         "moment": moment_info,
         "width": getattr(photo, "width", None),
         "height": getattr(photo, "height", None),
+        "orientation": getattr(photo, "orientation", None),
         "aesthetic_score": round(overall_score(photo), 4),
         "is_screenshot": bool(getattr(photo, "screenshot", False)),
         "is_selfie": bool(getattr(photo, "selfie", False)),
@@ -228,14 +230,13 @@ def parse_args() -> argparse.Namespace:
                     help="Which ranking survives the max-items cap (output is always chronological).")
     ap.add_argument("--only-local", action="store_true",
                     help="Only items whose original is already on disk (skip iCloud-only).")
-    ap.add_argument("--download-missing", action="store_true",
+    ap.add_argument("--download-missing", action=argparse.BooleanOptionalAction, default=True,
                     help="Pull iCloud-only originals on demand via PhotoKit (needs Photos "
-                         "automation permission). Lets you montage a whole event, not just "
-                         "what's already downloaded.")
+                         "automation permission). DEFAULT ON so the director considers the whole "
+                         "event, not just what happens to be downloaded (iCloud-only clips — often "
+                         "the payoff/reveal footage — were being silently skipped otherwise). Use "
+                         "--no-download-missing to restrict to already-local originals.")
     ap.add_argument("--keep-screenshots", action="store_true")
-    ap.add_argument("--keep-mechanical", action="store_true",
-                    help="Keep equipment shots (AC units, engines, appliances). "
-                         "By default these are dropped via Apple ML labels.")
     ap.add_argument("--no-dedupe-bursts", action="store_true")
     ap.add_argument("--no-convert-heic", action="store_true")
     ap.add_argument("--no-thumbnails", action="store_true")
@@ -319,8 +320,6 @@ def main() -> int:
         if args.only_local and not has_local_original(p):
             continue
         if args.min_score is not None and overall_score(p) < args.min_score:
-            continue
-        if not args.keep_mechanical and _is_mechanical(p):
             continue
         filtered.append(p)
 
