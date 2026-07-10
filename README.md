@@ -84,7 +84,7 @@ uv run scripts/select_photos.py --output-dir projects/tahoe --from-date 2026-08-
   ```bash
   ./examples/run-via-agy.sh                                   # last 7 days, Lyria score
   MONTAGE_MUSIC=~/Music/song.mp3 ./examples/run-via-agy.sh    # your own track
-  ./examples/run-via-agy.sh "Make a reel from my Vail trip"   # your own request
+  ./examples/run-via-agy.sh "Make a reel from my camping trip"  # your own request
   ```
 
   The skill itself is **agent-agnostic** — the same `SKILL.md` runs under Claude Code or any Agent-Skills-compatible agent. This example just shows the headless/CLI path; here it happens to use Antigravity's `agy`, but nothing about the skill is tied to it.

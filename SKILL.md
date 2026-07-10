@@ -101,10 +101,12 @@ First **look at the selected photos** to read the reel's *real* setting — the
 specific place/landscape/season you actually see (mountains vs. beach vs. city,
 golden hour, snow, etc.) — and put THAT in `--style` so the card matches the
 trip, not a generic template. `make_titlecard.py --text "<title for the whole
-event>" --subtitle "<place · date>" --style "<the real setting you saw, e.g.
-'rugged Gore Range peaks above Vail at golden hour, alpine summer meadow'>"` —
-full-frame 9:16, no crop. This card becomes the reel's **opening frame** (§7
-`--fade-in 0`), i.e. the social thumbnail — so make it strong.
+event>" --subtitle "<place · date>" --style "<the real setting you saw>"` —
+full-frame 9:16, no crop. Build `--style` from the photos, whatever the event:
+e.g. *snow-capped peaks at golden hour* for a mountain trip, *palm-lined beach at
+sunset* for the shore, *string lights over a backyard* for a birthday, *city
+skyline at dusk* for a weekend away. This card becomes the reel's **opening
+frame** (§7 `--fade-in 0`), i.e. the social thumbnail — so make it strong.
 
 ### 7. Build — cinematic recipe
 ```
